@@ -166,7 +166,7 @@ These paths are different:
 
 ```text
 ./data/fieldnotes.sqlite3
-/Users/jen/project/data/fieldnotes.sqlite3
+/path/to/project/data/fieldnotes.sqlite3
 /tmp/fieldnotes.sqlite3
 ```
 

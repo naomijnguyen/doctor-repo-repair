@@ -236,7 +236,7 @@ Baseline independently observed before second-wave edits:
 
 - milestone commit `7c18e13` (`Complete first multi-agent repair wave`);
 - branch `codex/field-notes-triage`;
-- author `Jennifer Naomi Nguyen <328120735+naomijnguyen@users.noreply.github.com>`;
+- author identity matched Jennifer's GitHub noreply identity;
 - clean working tree; and
 - no configured Git remote.
 

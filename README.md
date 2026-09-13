@@ -1,14 +1,23 @@
-# Field Notes
+# Bootwitch Doctor
 
-Field Notes is a small local-first workspace for capturing research notes before
-they are polished enough for a report, wiki, or project document. It has a plain
-browser interface, a Python HTTP API, durable SQLite storage, search, and atomic
-JSON import.
+> **A multi-agent architecture repair experiment**
 
-This repository also became a coordination experiment: five coding-agent lanes
-repaired a deliberately chaotic handoff by tracing the application backward from
-what a user could actually observe. The result is a compact application with a
-surprisingly serious set of persistence and failure tests.
+Bootwitch Doctor documents how I coordinated five coding agents to diagnose and
+repair a deliberately chaotic repository. The repair subject, **Field Notes**,
+is a small local-first workspace for capturing research notes before they are
+polished enough for a report, wiki, or project document.
+
+The experiment started by tracing the application backward from what a user
+could actually observe. From there, each agent received one architectural
+boundary to investigate or repair. I used shared diagrams, acceptance gates,
+and repeated forward and backward traces to keep the parallel work connected.
+The result is both a working application and a record of the orchestration that
+made the repair possible.
+
+Read the illustrated case study in
+[`docs/REPAIR_JOURNEY.md`](docs/REPAIR_JOURNEY.md), or jump to
+[`agents/Jen Study Notes/README.md`](agents/Jen%20Study%20Notes/README.md) for
+the detailed study guide.
 
 ## What works
 
@@ -121,8 +130,10 @@ diagrams/      visual snapshots and the connection-first repair plan
 - [`PROJECT_STATE.md`](PROJECT_STATE.md): current handoff and next work
 
 The five-agent experiment is summarized in
-[`CHALLENGE_UPDATE.md`](CHALLENGE_UPDATE.md). Jennifer's study-oriented version
-is in [`agents/Jen Study Notes/README.md`](agents/Jen%20Study%20Notes/README.md).
+[`CHALLENGE_UPDATE.md`](CHALLENGE_UPDATE.md). The before, intermediate, and
+after story is in [`docs/REPAIR_JOURNEY.md`](docs/REPAIR_JOURNEY.md), and the
+study-oriented version is in
+[`agents/Jen Study Notes/README.md`](agents/Jen%20Study%20Notes/README.md).
 
 ## Next pass
 

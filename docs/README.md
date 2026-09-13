@@ -7,6 +7,8 @@
   state ownership, and failure boundaries.
 - [`TECHNICAL.md`](TECHNICAL.md) is the implementation readthrough.
 - [`API.md`](API.md) documents the public HTTP contract.
+- [`REPAIR_JOURNEY.md`](REPAIR_JOURNEY.md) tells the before, intermediate, and
+  after story, including Jennifer's orchestration decisions.
 - [`STATUS.md`](STATUS.md) separates working behavior from the next beta tasks.
 - [`../README_INTENT.md`](../README_INTENT.md) records the product target and
   acceptance requirements.

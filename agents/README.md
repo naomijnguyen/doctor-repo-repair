@@ -4,7 +4,7 @@ This folder coordinates five agent conversations repairing Field Notes from the 
 
 ## Current Snapshot
 
-- Repository: `/Users/jennifer/Developer/Projects/field-notes-chaos-lab`
+- Repository: this Git repository (clone path varies by machine)
 - Branch observed: `codex/field-notes-triage`
 - Baseline commit: `1884f4d785f2c3042792d45854e06c0837599408`
 - Working tree: intentionally dirty with prior multi-agent changes

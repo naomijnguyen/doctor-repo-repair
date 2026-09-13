@@ -1,4 +1,6 @@
-# Challenge Update: Five Agents, One Chaotic Repository
+# Bootwitch Doctor: Five Agents, One Chaotic Repository
+
+> **A multi-agent architecture repair experiment**
 
 ## The short version
 
@@ -100,11 +102,12 @@ The lower data path is durable and atomic. The second wave focuses on:
 5. one coherent local UI/API startup path; and
 6. independent browser and HTTP acceptance evidence.
 
-The detailed assignments are in `agents/NEXT_WAVE.md`. Jennifer's study version
-of the first repair is in `agents/Jen Study Notes/README.md`.
+The detailed assignments are in `agents/NEXT_WAVE.md`. The full progression is
+in `docs/REPAIR_JOURNEY.md`, and Jennifer's study version of the first repair is
+in `agents/Jen Study Notes/README.md`.
 
 ## Current repository status
 
-This update records a local milestone on `codex/field-notes-triage`. No remote is
-configured yet. The next publication decision can be made after the second-wave
-trust-boundary and browser work is accepted.
+The first repair wave and its documentation are complete in this repository.
+The remaining second-wave trust-boundary and browser work is recorded separately
+so the verified milestone is not confused with planned work.
