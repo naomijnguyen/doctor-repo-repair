@@ -1,30 +1,95 @@
+from __future__ import annotations
+
 import logging
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlparse
 
 from .api import handle_request
+from .composition import create_service
 from .config import get_port
-from .repository import NoteRepository
 from .service import NoteService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("fieldnotes")
 
-repository = NoteRepository()
-service = NoteService(repository)
+MAX_BODY_BYTES = 1_000_000
 
+
+def is_allowed_origin(origin):
+    if origin == "null":
+        # Browsers use this origin when web/index.html is opened directly.
+        return True
+    if not origin:
+        return False
+    parsed = urlparse(origin)
+    try:
+        port = parsed.port
+    except ValueError:
+        return False
+    return (
+        parsed.scheme == "http"
+        and parsed.hostname in {"127.0.0.1", "localhost"}
+        and parsed.path in {"", "/"}
+        and not parsed.params
+        and not parsed.query
+        and not parsed.fragment
+        and port is not None
+    )
 
 class Handler(BaseHTTPRequestHandler):
-    def _handle(self):
-        length = int(self.headers.get("Content-Length", "0"))
-        body = self.rfile.read(length) if length else b""
-        status, headers, response = handle_request(self.command, self.path, body, service)
+    service: NoteService
+
+    def _cors_origin(self):
+        origin = self.headers.get("Origin")
+        return origin if is_allowed_origin(origin) else None
+
+    def _send(self, status, headers=None, response=b""):
         self.send_response(status)
-        for key, value in headers.items():
+        for key, value in (headers or {}).items():
             self.send_header(key, value)
-        self.send_header("Access-Control-Allow-Origin", "*")
+        origin = self._cors_origin()
+        if origin:
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Vary", "Origin")
+        self.send_header("Content-Length", str(len(response)))
         self.end_headers()
         if response:
             self.wfile.write(response)
+
+    def _handle(self):
+        raw_length = self.headers.get("Content-Length", "0")
+        try:
+            length = int(raw_length)
+        except ValueError:
+            self._send(400, {"Content-Type": "application/json"}, b'{"error":{"code":"invalid_content_length","message":"invalid Content-Length"}}')
+            return
+        if length < 0:
+            self._send(400, {"Content-Type": "application/json"}, b'{"error":{"code":"invalid_content_length","message":"invalid Content-Length"}}')
+            return
+        if length > MAX_BODY_BYTES:
+            self._send(413, {"Content-Type": "application/json"}, b'{"error":{"code":"request_too_large","message":"request body is too large"}}')
+            return
+        body = self.rfile.read(length) if length else b""
+        try:
+            status, headers, response = handle_request(
+                self.command, self.path, body, self.service
+            )
+        except Exception:
+            logger.exception("Unhandled request error")
+            status = 500
+            headers = {"Content-Type": "application/json"}
+            response = b'{"error":{"code":"internal_error","message":"internal server error"}}'
+        self._send(status, headers, response)
+
+    def do_OPTIONS(self):
+        origin = self._cors_origin()
+        if not origin:
+            self._send(403, {"Content-Type": "application/json"}, b'{"error":{"code":"origin_not_allowed","message":"origin not allowed"}}')
+            return
+        self._send(204, {
+            "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+        })
 
     do_GET = _handle
     do_POST = _handle
@@ -34,10 +99,39 @@ class Handler(BaseHTTPRequestHandler):
         logger.info(fmt, *args)
 
 
+def handler_for(service: NoteService):
+    """Bind one composed service to all handlers created by an HTTP server."""
+
+    class ServiceHandler(Handler):
+        pass
+
+    ServiceHandler.service = service
+    return ServiceHandler
+
+
+def build_server(port: int | None = None, data_path=None):
+    """Build a configured server and return its repository lifecycle owner."""
+    selected_port = get_port() if port is None else port
+    service, repository = create_service(data_path)
+    try:
+        server = ThreadingHTTPServer(
+            ("127.0.0.1", selected_port), handler_for(service)
+        )
+    except Exception:
+        repository.close()
+        raise
+    return server, repository
+
+
 def main():
-    port = get_port()
+    server, repository = build_server()
+    port = server.server_address[1]
     logger.info("Field Notes listening on http://127.0.0.1:%s", port)
-    ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
+    try:
+        server.serve_forever()
+    finally:
+        server.server_close()
+        repository.close()
 
 
 if __name__ == "__main__":

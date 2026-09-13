@@ -2,9 +2,9 @@ import re
 
 
 def normalize_tag(tag: str) -> str:
-    """Normalize a tag for API-created notes."""
+    """Normalize a tag consistently across API and import entry points."""
     tag = tag.strip().lower()
-    tag = re.sub(r"\\s+", "-", tag)
+    tag = re.sub(r"\s+", "-", tag)
     return re.sub(r"[^a-z0-9_-]", "", tag)
 
 

@@ -1,16 +1,31 @@
 # Status
 
-Updated: 2026-09-10
+Updated: 2026-09-12
 
-- UI/API integration mostly works.
-- Search is implemented.
-- Delete button is still blocked on backend support.
-- Persistence is currently an in-memory prototype; SQLite is planned after beta feedback.
-- Canonical timestamp field is `created_at` for now.
-- Local server currently uses port 8000.
-- Known issue: imported tags sometimes differ from API-created tags.
+## Working now
+
+- The API can create, list, search, and delete notes.
+- The configured SQLite repository is the running server's durable state owner.
+- Create and delete survive complete server-process restarts.
+- The import command sends one complete payload through the running API.
+- Import validates before mutation and commits through one SQLite transaction.
+- Controlled mid-batch failure rolls back completely and supports a clean retry.
+- The browser uses one API module and reports request failures instead of presenting them as success.
+- The browser renders note content as text, so note fields cannot inject markup.
+- Empty, loading, saving, searching, and failure states are visible.
+
+## Known gaps
+
+- The UI has syntax checks but no browser-level interaction tests.
+- The CORS policy is designed for local use, not hosted deployment.
+- Mutation requests do not yet reject disallowed origins or wrong media types.
+- The browser API base is fixed to port 8000 despite configurable server ports.
+- Slow mutation and refresh requests can still produce stale UI state.
+- Portable atomic export and recovery are not implemented.
 
 Before beta:
-- settle API field naming
-- ensure failed writes are surfaced in UI
-- consolidate project-state documentation
+- implement atomic export and round-trip recovery
+- enforce the local HTTP trust boundary and consistent JSON method errors
+- coordinate browser mutation, refresh, and search state
+- add browser-level coverage for create, search, delete, and error states
+- provide a coherent same-origin or one-command local launch path

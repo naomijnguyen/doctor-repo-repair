@@ -1,3 +1,5 @@
-def normalize_tag(tag: str) -> str:
-    """Legacy import normalization."""
-    return tag.strip().lower().replace(" ", "_")
+"""Compatibility imports for the former text-helper module."""
+
+from ..utils import normalize_tag
+
+__all__ = ["normalize_tag"]

@@ -1,6 +1,8 @@
 [project]
 name = "field-notes"
 version = "0.4.0"
+description = "A small local-first research note workspace"
+readme = "README.md"
 requires-python = ">=3.11"
 
 [tool.fieldnotes]

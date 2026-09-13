@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 
@@ -16,9 +16,25 @@ class Note:
             id=note_id,
             title=title,
             body=body,
-            tags=tags,
+            tags=list(tags),
             created_at=datetime.now(timezone.utc).isoformat(),
         )
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        return {
+            "id": self.id,
+            "title": self.title,
+            "body": self.body,
+            "tags": list(self.tags),
+            "createdAt": self.created_at,
+        }
+
+
+@dataclass(frozen=True)
+class NoteDraft:
+    """A validated, storage-neutral note waiting for a local ID."""
+
+    title: str
+    body: str
+    tags: tuple[str, ...]
+    created_at: str
