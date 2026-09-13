@@ -28,7 +28,6 @@ the written handoff when a change crosses an owned boundary.
 ### Owns
 
 - `agents/shared/`
-- `agents/Jen Study Notes/`
 - final reconciliation of `README.md`, `PROJECT_STATE.md`, and `docs/`
 - shared-contract acceptance and integration order
 

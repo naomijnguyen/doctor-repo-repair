@@ -15,9 +15,9 @@ The result is both a working application and a record of the orchestration that
 made the repair possible.
 
 Read the illustrated case study in
-[`docs/REPAIR_JOURNEY.md`](docs/REPAIR_JOURNEY.md), or jump to
-[`agents/Jen Study Notes/README.md`](agents/Jen%20Study%20Notes/README.md) for
-the detailed study guide.
+[`docs/REPAIR_JOURNEY.md`](docs/REPAIR_JOURNEY.md), or inspect the evolving
+architecture in
+[`agents/shared/ARCHITECTURE_MAPS.md`](agents/shared/ARCHITECTURE_MAPS.md).
 
 ## What works
 
@@ -115,7 +115,7 @@ tools/         JSON import command
 web/           static browser interface
 tests/         unit, contract, integration, subprocess, and restart tests
 docs/          current product and engineering documentation
-agents/        coordination packets, raw handoffs, maps, and study notes
+agents/        coordination packets, raw handoffs, and architecture maps
 diagrams/      visual snapshots and the connection-first repair plan
 ```
 
@@ -131,9 +131,7 @@ diagrams/      visual snapshots and the connection-first repair plan
 
 The five-agent experiment is summarized in
 [`CHALLENGE_UPDATE.md`](CHALLENGE_UPDATE.md). The before, intermediate, and
-after story is in [`docs/REPAIR_JOURNEY.md`](docs/REPAIR_JOURNEY.md), and the
-study-oriented version is in
-[`agents/Jen Study Notes/README.md`](agents/Jen%20Study%20Notes/README.md).
+after story is in [`docs/REPAIR_JOURNEY.md`](docs/REPAIR_JOURNEY.md).
 
 ## Next pass
 

@@ -26,9 +26,7 @@ Read these before beginning:
 4. [`../TRIAGE.md`](../TRIAGE.md) - findings and prior acceptance evidence.
 5. [`shared/HANDOFF_TEMPLATE.md`](shared/HANDOFF_TEMPLATE.md) - required update format.
 6. [`shared/SHARED_NOTES.md`](shared/SHARED_NOTES.md) - lead-consolidated cross-agent ledger.
-7. [`Jen Study Notes/README.md`](Jen%20Study%20Notes/README.md) - Jennifer's
-   canonical study guide, current status, terminology, and reading order.
-8. [`NEXT_WAVE.md`](NEXT_WAVE.md) - second-wave ownership, dependencies, and
+7. [`NEXT_WAVE.md`](NEXT_WAVE.md) - second-wave ownership, dependencies, and
    acceptance evidence for all five agents.
 
 ## Roles

@@ -103,8 +103,7 @@ The lower data path is durable and atomic. The second wave focuses on:
 6. independent browser and HTTP acceptance evidence.
 
 The detailed assignments are in `agents/NEXT_WAVE.md`. The full progression is
-in `docs/REPAIR_JOURNEY.md`, and Jennifer's study version of the first repair is
-in `agents/Jen Study Notes/README.md`.
+in `docs/REPAIR_JOURNEY.md`.
 
 ## Current repository status
 

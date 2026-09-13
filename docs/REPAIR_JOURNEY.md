@@ -194,8 +194,6 @@ counted as proof, and keep the whole system legible while it changed.
 - [`../diagrams/plans/CONNECTION_FIRST_REPAIR_PLAN.md`](../diagrams/plans/CONNECTION_FIRST_REPAIR_PLAN.md):
   original connection-first plan
 - [`../agents/README.md`](../agents/README.md): agent roles and coordination rules
-- [`../agents/Jen Study Notes/README.md`](../agents/Jen%20Study%20Notes/README.md):
-  detailed study guide
 - [`TECHNICAL.md`](TECHNICAL.md): implementation readthrough
 
 ## Portfolio copy

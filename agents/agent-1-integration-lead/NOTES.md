@@ -60,5 +60,4 @@
 ## Evidence And Handoff
 
 Use `agents/shared/HANDOFF_TEMPLATE.md` when consolidating the next agent update.
-The canonical reader-facing consolidation is in
-`agents/Jen Study Notes/README.md`.
+The canonical public-facing consolidation is in `docs/REPAIR_JOURNEY.md`.

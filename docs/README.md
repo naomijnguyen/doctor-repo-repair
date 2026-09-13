@@ -21,5 +21,4 @@ preserved as evidence of the starting architecture, not as current documentation
 
 The full repair history, agent handoffs, and evolving diagrams live under
 [`../agents/`](../agents/). For a readable explanation of the five-agent repair,
-start with
-[`../agents/Jen Study Notes/README.md`](../agents/Jen%20Study%20Notes/README.md).
+start with [`REPAIR_JOURNEY.md`](REPAIR_JOURNEY.md).
