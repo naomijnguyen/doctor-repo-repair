@@ -195,6 +195,9 @@ Agent 1 maintains the consolidated sections in this file. Other agents should wr
   server/database, then import that file into a separate empty database and
   compare the recovered public records under the local-ID policy. A controlled
   export failure must preserve the prior destination byte-for-byte.
+- Agent 5 prepared the complete second-wave acceptance matrix in its own
+  `NOTES.md`. It is test planning only: no second-wave production implementation
+  is claimed at this checkpoint.
 
 ## Integration Log
 

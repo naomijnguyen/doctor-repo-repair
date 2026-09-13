@@ -1,5 +1,9 @@
 # Field Notes
 
+> This document is the product intent and acceptance target. For implemented
+> behavior, use [`README.md`](README.md), [`docs/STATUS.md`](docs/STATUS.md), and
+> [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
 Field Notes is a small, local-first workspace for capturing, organizing, and retrieving research notes.
 
 It is designed for the moment when an observation is worth keeping but does not yet belong in a polished document: a result from an experiment, a comparison to revisit, a question raised while reading, or a short connection between ideas. The application should make those notes quick to record, easy to find, and safe to keep on the user's own machine.

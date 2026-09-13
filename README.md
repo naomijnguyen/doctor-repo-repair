@@ -1,19 +1,35 @@
 # Field Notes
 
-Field Notes is a small local-first research note workspace with a Python API,
-browser UI, and durable SQLite storage. It is a deliberately compact prototype:
-create, list, search, delete, and atomic JSON import work today.
+Field Notes is a small local-first workspace for capturing research notes before
+they are polished enough for a report, wiki, or project document. It has a plain
+browser interface, a Python HTTP API, durable SQLite storage, search, and atomic
+JSON import.
 
-## Product requirements
+This repository also became a coordination experiment: five coding-agent lanes
+repaired a deliberately chaotic handoff by tracing the application backward from
+what a user could actually observe. The result is a compact application with a
+surprisingly serious set of persistence and failure tests.
 
-- Create, list, search, and delete notes.
-- Notes have a title, body, tags, and creation timestamp.
-- Tags should be normalized consistently regardless of whether they are created through the API or imported from a file.
-- The browser UI should use the API rather than maintaining a second source of truth.
-- The application is intended to run locally by default, but the API boundary should be explicit enough that it could later be hosted.
-- Errors should be visible to the user; failed writes must not appear successful.
-- Successful writes and deletes should survive process restarts.
-- A multi-note import should commit completely or leave stored state unchanged.
+## What works
+
+- Create, list, search, and delete notes through the browser or API.
+- Store titles, plain-text bodies, normalized tags, and UTC timestamps.
+- Keep committed notes and deletions across complete server restarts.
+- Import a JSON file as one all-or-nothing batch.
+- Reject invalid later records before storage changes begin.
+- Roll back the whole batch when storage fails after an insert has started.
+- Refuse corrupt or incompatible databases instead of silently replacing them
+  or falling back to temporary memory.
+
+The browser and import command use the running API as their shared authority.
+The in-memory repository remains as a fast test adapter; the application runtime
+uses SQLite.
+
+## Requirements
+
+- Python 3.11 or newer
+- Node.js only for the optional frontend syntax check
+- No third-party runtime packages
 
 ## Run locally
 
@@ -23,18 +39,27 @@ Start the API from the repository root:
 python3 -m fieldnotes.server
 ```
 
-In a second terminal, serve the browser UI:
+In a second terminal, serve the browser files:
 
 ```bash
 python3 -m http.server 8080 --directory web
 ```
 
-Open `http://127.0.0.1:8080`. The UI calls the API at `http://127.0.0.1:8000`.
+Open `http://127.0.0.1:8080`.
 
-Notes are stored in `./data/fieldnotes.sqlite3` by default. Set
-`FIELDNOTES_DATA` to use another database path and `FIELDNOTES_PORT` to change
-the API port. The static browser client still targets port 8000, so custom-port
-browser support remains a follow-up.
+The API binds to `127.0.0.1:8000` and stores notes in
+`./data/fieldnotes.sqlite3` by default. Runtime databases and SQLite sidecars are
+ignored by Git.
+
+Configuration:
+
+```bash
+FIELDNOTES_DATA=/path/to/notes.sqlite3 python3 -m fieldnotes.server
+FIELDNOTES_PORT=9000 python3 -m fieldnotes.server
+```
+
+The static browser currently targets port 8000, so the custom-port setting is
+most useful for direct API and CLI work until the same-origin runtime is added.
 
 ## Import notes
 
@@ -44,24 +69,65 @@ With the API running:
 python3 tools/import_sample.py data/sample.json
 ```
 
-The command sends one complete payload to `POST /api/import`. Validation happens
-before storage begins, and SQLite commits the batch in one transaction.
+The file format is UTF-8 JSON with a top-level `notes` array:
 
-## Test
+```json
+{
+  "notes": [
+    {
+      "title": "Plate review",
+      "body": "Check the edge wells before repeating the run.",
+      "tags": ["assay review"],
+      "createdAt": "2026-09-12T20:30:00Z"
+    }
+  ]
+}
+```
+
+The command sends the complete document to `POST /api/import`. The server owns
+semantic validation, and SQLite publishes the batch in one transaction.
+
+## Verify the project
 
 ```bash
 ./scripts/check.sh
 ```
 
-The check runs Python compilation, frontend syntax checks when Node.js is available, and the Python test suite.
+The check compiles the Python package, checks frontend JavaScript syntax when
+Node.js is available, and runs the complete unittest suite. The first
+multi-agent repair milestone passes 89 tests, including real CLI, HTTP,
+controlled-failure, and process-restart coverage.
 
-## Repository status
+## Repository map
 
-Durable runtime composition and atomic import are implemented and verified
-through real CLI, HTTP, rollback, retry, and process-restart tests. The next
-milestones are portable atomic export, browser request-state repair, and a
-cleaner same-origin local runtime.
+```text
+fieldnotes/    domain, API, composition, and repository implementations
+tools/         JSON import command
+web/           static browser interface
+tests/         unit, contract, integration, subprocess, and restart tests
+docs/          current product and engineering documentation
+agents/        coordination packets, raw handoffs, maps, and study notes
+diagrams/      visual snapshots and the connection-first repair plan
+```
 
-See `docs/API.md` for the current wire format, `docs/ARCHITECTURE.md` for
-component boundaries, `PROJECT_STATE.md` for the active handoff, and
-`agents/Jen Study Notes/README.md` for the five-agent repair walkthrough.
+## Documentation
+
+- [`docs/README.md`](docs/README.md): documentation map and reading order
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): system structure, flows, and
+  failure boundaries
+- [`docs/TECHNICAL.md`](docs/TECHNICAL.md): implementation readthrough
+- [`docs/API.md`](docs/API.md): current HTTP contract
+- [`README_INTENT.md`](README_INTENT.md): product intent and acceptance target
+- [`PROJECT_STATE.md`](PROJECT_STATE.md): current handoff and next work
+
+The five-agent experiment is summarized in
+[`CHALLENGE_UPDATE.md`](CHALLENGE_UPDATE.md). Jennifer's study-oriented version
+is in [`agents/Jen Study Notes/README.md`](agents/Jen%20Study%20Notes/README.md).
+
+## Next pass
+
+The durable data path is complete for the current milestone. The next focused
+work is portable atomic export, stricter local HTTP mutation rules, coordinated
+browser request state, browser-level testing, and one coherent local UI/API
+startup path. Those assignments are mapped in
+[`agents/NEXT_WAVE.md`](agents/NEXT_WAVE.md).

@@ -230,6 +230,63 @@
   malformed-port startup-order hold.
 - Export and recovery are now the next red boundary.
 
+## Second wave: pre-implementation acceptance matrix
+
+Baseline independently observed before second-wave edits:
+
+- milestone commit `7c18e13` (`Complete first multi-agent repair wave`);
+- branch `codex/field-notes-triage`;
+- author `Jennifer Naomi Nguyen <328120735+naomijnguyen@users.noreply.github.com>`;
+- clean working tree; and
+- no configured Git remote.
+
+This matrix describes observable outcomes before implementation claims are
+accepted. Tests should cross the named real boundary; a mock may create a
+controlled timing or failure condition, but must not replace the connection
+being proved.
+
+| Connection | Success case | Controlled failure case | Real boundary that must be crossed | Contract dependency |
+| --- | --- | --- | --- | --- |
+| Populated state -> export | Create notes through the running API, invoke the accepted public export entry point, and parse readable UTF-8 JSON containing the required public fields and timestamps. | Reject or fail the export without reporting success or publishing a partial document. | Real server/entry point, configured SQLite database, and filesystem destination. | Agent 1 must freeze the export JSON shape and public entry point. |
+| Export -> fresh recovery | Import that exported document through the real import command into a separate empty configured database; after a process restart, compare recovered fields and timestamps under the accepted local-ID policy. | Corrupt or contract-invalid export input must leave the fresh destination database unchanged. | Two distinct SQLite files, real commands/API, and at least one complete server restart. | Agent 1 must state whether equality excludes source IDs and how ordering is compared. |
+| Atomic publication | Successful export publishes one complete destination document. | Inject a write, flush, close, or publish failure after an older valid destination exists; the older file must remain byte-for-byte identical and no temporary sibling may remain. | Actual destination-directory filesystem operations, not only an in-memory writer. | Agent 1 must freeze fail-if-exists versus intentional-replace behavior. |
+| HTTP trust boundary | An allowed same-origin browser-style mutation with the required JSON media type succeeds and persists. | A disallowed or opaque origin and a wrong/missing mutation media type receive the accepted structured error and cause zero mutation. | Actual listening `ThreadingHTTPServer` socket and subsequent public state read. | Agent 1/4 must freeze allowed origins, `Origin: null`, media-type, and status/error rules. |
+| Unsupported methods and limits | Supported preflight/methods and an in-limit request retain structured API behavior. | Unsupported methods and oversized bodies return the accepted JSON errors rather than HTML/default-handler output, with zero mutation. | Raw HTTP against the actual server handler. | Agent 4 transport contract and Agent 1 acceptance. |
+| One-command local topology | The documented command starts loopback-only UI and API service, prints the exact usable browser URL, and uses the configured database. | Invalid port or storage configuration fails visibly without a false-ready message, hidden memory fallback, or leaked lifecycle owner. | Real subprocess, listening socket, static asset request, API request, stop, and restart. | Agent 1 must accept the topology Agent 4 proposes. |
+| Slow browser save | A save captures draft A; while it is pending, the user types draft B; completion of A does not erase B. | A failed save leaves recoverable input and an honest error/pending state. | Real browser DOM and controlled delayed/failed HTTP response. | Agent 4 must freeze form-state semantics. |
+| Stale browser reads | The newest search/list intent remains rendered when responses arrive out of order. | A late older response or a refresh failure cannot overwrite newer results or misreport a committed mutation as failed. | Real browser event loop, DOM, and controlled response ordering. | Agent 4 must freeze its generation/invalidation rule. |
+| Artifact hygiene | Successful tests clean up temporary databases, exports, browser artifacts, and sidecars. | A deliberately failed operation also leaves no tracked/unignored runtime artifact or abandoned export temporary. | Filesystem plus Git tracked/ignored-state inspection after success and failure runs. | Export temporary naming must be known once Agent 2 proposes it. |
+
+### Vocabulary attached to the matrix
+
+- **Untrusted input** means data crossing into a boundary where this component
+  cannot assume it is valid. A browser's `Origin` header, an import JSON field,
+  a URL note ID, and an environment-variable port are all untrusted—even when
+  the expected caller is our own UI or command—because a caller can be buggy,
+  stale, hand-written, or malicious.
+- **Durable mutation** means a state change that is intended to outlive the
+  function and usually the process. Appending to a local Python list is a
+  mutation, but it is not durable. Committing a SQLite transaction or atomically
+  publishing an export file is durable mutation.
+- **Publication point** is the moment incomplete private work becomes the
+  official visible result. For import it is SQLite `COMMIT`; for atomic export
+  it should be the final filesystem replacement/rename after the temporary file
+  has been completely written and closed.
+- **Invariant** is a statement that must remain true through success and
+  failure. The central export invariant is: after any attempt, the destination
+  is either the complete old export or the complete new export, never a partial
+  mixture.
+- **Connection proof** follows the actual arrow named in the architecture. A
+  mocked repository can prove service policy, but it cannot prove that an HTTP
+  request reached committed SQLite state or survived a new process.
+
+### Initial status
+
+- Matrix written before second-wave production changes.
+- Export, trust-boundary, topology, and browser contracts await Agent 1 freeze.
+- No second-wave production file or acceptance-test implementation changed by
+  Agent 5 at this checkpoint.
+
 ## Handoff
 
 Complete `agents/shared/HANDOFF_TEMPLATE.md` in the agent conversation when evidence is ready for Agent 1 review.

@@ -40,6 +40,9 @@
   import is visible through the public API and survives restart; a controlled
   second-row storage failure rolls back completely and retries cleanly. The
   current full check passes 89 tests.
+- Agent 5 prepared the second-wave black-box acceptance matrix before new
+  production work. Export, HTTP trust, topology, browser timing, and artifact
+  hygiene claims now have explicit success and controlled-failure requirements.
 
 ## Gotchas
 

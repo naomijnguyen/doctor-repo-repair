@@ -1,14 +1,27 @@
-# Field Notes: As-Built Architecture
+# Field Notes: Architecture Before Repair
+
+> **Historical snapshot:** This document records the source-derived architecture
+> before durable SQLite runtime composition and atomic import were connected.
+> See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the current system.
 
 Review draft, inspected 2026-09-12 Pacific / 2026-09-13 UTC.
 
-This document describes the working implementation, not a proposed replacement. The repository is being edited concurrently. During inspection its branch changed from `main` to `codex/field-notes-triage`; that change was not made by this review. The baseline inspected during the field scan was `1884f4d785f2c3042792d45854e06c0837599408`, but uncommitted code is part of this description. A commit hash alone does not reproduce this state.
+This document describes the implementation observed during that review, not a
+proposed replacement or the current milestone. The repository was being edited
+concurrently. During inspection its branch changed from `main` to
+`codex/field-notes-triage`; that change was not made by the review. The baseline
+inspected during the field scan was
+`1884f4d785f2c3042792d45854e06c0837599408`, but uncommitted code was part of the
+snapshot. A commit hash alone does not reproduce that state.
 
 ## The Short Version
 
 Field Notes is a small research-note application. A browser interface talks to a local Python HTTP server. The server translates requests into service calls, and the service stores notes in a shared, lock-protected Python repository.
 
-The repository currently holds notes in memory. Successful API writes mean the note exists in that server process, not that it has been saved to disk. The importer can load a JSON file into a repository, but its command-line entry point creates a separate repository from the running server.
+At that checkpoint, the repository held notes in memory. Successful API writes
+meant the note existed in that server process, not that it had been saved to
+disk. The importer could load a JSON file into a repository, but its command-line
+entry point created a separate repository from the running server.
 
 There are no model calls, agents, background jobs, cloud services, or database connections in the inspected application path.
 
