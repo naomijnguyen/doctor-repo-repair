@@ -338,16 +338,23 @@ reran the live suite and architecture traces after connections landed.
 ## Reading order
 
 1. Read this guide once for the complete story.
-2. Open [`../shared/ARCHITECTURE_MAPS.md`](../shared/ARCHITECTURE_MAPS.md) and
+2. Read
+   [`what-the-exercise-tested.md`](what-the-exercise-tested.md) for the hidden
+   challenge design, the intended traps, and how the repair went beyond the
+   original answer key.
+3. Practice with [`interview-language.md`](interview-language.md) for short
+   answers, technical follow-ups, accurate ownership language, and claims to
+   verify before using them.
+4. Open [`../shared/ARCHITECTURE_MAPS.md`](../shared/ARCHITECTURE_MAPS.md) and
    follow the current forward and backward traces.
-3. Read [`durable-storage.md`](durable-storage.md) for schema, transactions, and
+5. Read [`durable-storage.md`](durable-storage.md) for schema, transactions, and
    repository design.
-4. Read [`atomic-import.md`](atomic-import.md) for validation, batching, and the
+6. Read [`atomic-import.md`](atomic-import.md) for validation, batching, and the
    atomicity-versus-idempotency distinction.
-5. Read
+7. Read
    [`runtime-composition-and-portability.md`](runtime-composition-and-portability.md)
    for state ownership, configuration, lifecycle, and command wiring.
-6. Read [`connection-verification.md`](connection-verification.md) for the
+8. Read [`connection-verification.md`](connection-verification.md) for the
    evidence ladder and subprocess test strategy.
 
 ## Source notes
@@ -368,6 +375,7 @@ you want the exact investigation history or test evidence:
 - [`../agent-5-connection-verification/NOTES.md`](../agent-5-connection-verification/NOTES.md):
   public process, restart, and controlled-failure evidence.
 
-For a future study packet, this README should become the main chapter. The four
-topic guides can become deeper appendices, and the raw agent notes can remain a
+For a future study packet, this README should become the main chapter. The
+exercise retrospective and interview guide can follow it, the four topic guides
+can become deeper appendices, and the raw agent notes can remain a
 source-evidence section rather than being copied into the main narrative.
