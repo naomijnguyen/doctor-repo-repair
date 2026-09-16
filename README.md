@@ -133,6 +133,22 @@ The five-agent experiment is summarized in
 [`CHALLENGE_UPDATE.md`](CHALLENGE_UPDATE.md). The before, intermediate, and
 after story is in [`docs/REPAIR_JOURNEY.md`](docs/REPAIR_JOURNEY.md).
 
+## Reusable outcome: Bootwitch AGENTS
+
+The repair produced more than a working application. I turned the coordination
+method into [Bootwitch AGENTS](https://github.com/naomijnguyen/bootwitch-agents),
+an installable skill for running future multi-agent repository sessions.
+
+The skill creates bounded assignments, project-specific notes, append-only
+cross-agent messages, evidence-backed handoffs, and forward and backward
+architecture traces. A session overview agent updates the README, architecture
+diagrams, and technical notes for every project touched by the work. One
+architecture lead reviews the combined evidence before handling authorized
+commits, versioning, and pushes.
+
+[View the source](https://github.com/naomijnguyen/bootwitch-agents) ·
+[Download v0.2.0](https://github.com/naomijnguyen/bootwitch-agents/releases/tag/v0.2.0)
+
 ## Next pass
 
 The durable data path is complete for the current milestone. The next focused
