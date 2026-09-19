@@ -147,6 +147,12 @@ agents/        coordination packets, raw handoffs, and architecture maps
 diagrams/      visual snapshots and the connection-first repair plan
 ```
 
+## Tech stack and AI collaboration
+
+The application uses Python 3.11, the Python standard-library HTTP server, SQLite, browser-native HTML/CSS/JavaScript, Bash checks, and Python unittest coverage.
+
+Since 2025, I’ve been making software in active collaboration with AI coding systems across providers, and I want to do more of it. I built Bootwitch Doctor with five Codex coding agents from OpenAI, using the project to turn multi-agent architecture repair into a method I could inspect, test, and reuse.
+
 ## Documentation
 
 - [`docs/README.md`](docs/README.md): documentation map and reading order
