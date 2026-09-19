@@ -290,3 +290,23 @@ being proved.
 ## Handoff
 
 Complete `agents/shared/HANDOFF_TEMPLATE.md` in the agent conversation when evidence is ready for Agent 1 review.
+
+## 2026-09-18 same-origin reachability repair
+
+- Status: **One-command local topology verified.**
+- `python3 -m fieldnotes.server` now serves `web/` and `/api/*` from the same
+  loopback process and prints `http://127.0.0.1:8000` as the usable browser URL.
+- `web/api.js` uses relative request paths, so `FIELDNOTES_PORT` changes the UI
+  and API port together instead of silently disconnecting the browser.
+- A new subprocess acceptance test fetches `/`, `/api.js`, and `/api/notes`
+  from one real listening server. It asserts the browser client contains the
+  same-origin fetch and no fixed `127.0.0.1:8000` API base.
+- The canonical check passed 90 tests, including Python compilation and
+  frontend syntax checks.
+- A live field test fetched `/`, `/styles.css`, `/app.js`, and `/api.js`, then
+  created, searched for, and deleted a uniquely named verification note through
+  the public API. Cleanup restored the pre-test note count and preserved the
+  existing user note.
+- Scope limit: this verifies local reachability and UI/API composition. It does
+  not close the separate trust-boundary, export, or browser request-ordering
+  work recorded in the second-wave matrix.
