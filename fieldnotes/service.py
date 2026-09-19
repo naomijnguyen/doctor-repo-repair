@@ -6,6 +6,8 @@ from .importer import validate_import_payload
 from .repository import NoteRepository
 from .utils import normalize_query, normalize_tag
 
+MAX_NOTE_ID = 2**63 - 1
+
 
 class NoteService:
     def __init__(self, repository: NoteRepository):
@@ -22,12 +24,14 @@ class NoteService:
             raise ValueError("tags must be a list")
 
         cleaned = []
+        seen_tags = set()
         for tag in tags:
             if not isinstance(tag, str):
                 raise ValueError("tags must contain strings")
             normalized = normalize_tag("-".join(tag.split()))
-            if normalized:
+            if normalized and normalized not in seen_tags:
                 cleaned.append(normalized)
+                seen_tags.add(normalized)
         return self.repository.add(title.strip(), body.strip(), cleaned)
 
     def list_notes(self):
@@ -51,4 +55,10 @@ class NoteService:
         return results
 
     def delete_note(self, note_id: int) -> bool:
+        if (
+            isinstance(note_id, bool)
+            or not isinstance(note_id, int)
+            or not 1 <= note_id <= MAX_NOTE_ID
+        ):
+            raise ValueError("note id must be a positive integer")
         return self.repository.delete(note_id)

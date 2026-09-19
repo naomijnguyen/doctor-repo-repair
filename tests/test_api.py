@@ -72,7 +72,12 @@ class ApiTests(unittest.TestCase):
         self.assertNotIn("created_at", note)
 
     def test_delete_rejects_invalid_ids_and_extra_segments(self):
-        for path in ("/api/notes/nope", "/api/notes/0", "/api/notes/-1"):
+        for path in (
+            "/api/notes/nope",
+            "/api/notes/0",
+            "/api/notes/-1",
+            f"/api/notes/{'9' * 10_000}",
+        ):
             with self.subTest(path=path):
                 status, _, body = self.request("DELETE", path)
                 self.assertEqual(status, 400)
@@ -81,6 +86,20 @@ class ApiTests(unittest.TestCase):
         status, _, body = self.request("DELETE", "/api/notes/1/extra")
         self.assertEqual(status, 404)
         self.assertEqual(json.loads(body)["error"]["code"], "not_found")
+
+    def test_create_deduplicates_equivalent_normalized_tags(self):
+        status, _, body = self.request(
+            "POST",
+            "/api/notes",
+            {
+                "title": "One",
+                "body": "",
+                "tags": ["Deep Learning", "deep-learning", "AI", " ai "],
+            },
+        )
+
+        self.assertEqual(status, 201)
+        self.assertEqual(json.loads(body)["tags"], ["deep-learning", "ai"])
 
     def test_known_route_with_wrong_method_returns_405(self):
         status, _, body = self.request("POST", "/api/search")

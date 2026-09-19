@@ -14,6 +14,15 @@ class ServiceTests(unittest.TestCase):
         note = self.service.create_note("A", "B", [" Deep Learning ", "AI/ML"])
         self.assertEqual(note.tags, ["deep-learning", "aiml"])
 
+    def test_create_deduplicates_normalized_tags_in_first_seen_order(self):
+        note = self.service.create_note(
+            "A",
+            "B",
+            ["Deep Learning", "deep-learning", "AI", " ai "],
+        )
+
+        self.assertEqual(note.tags, ["deep-learning", "ai"])
+
     def test_create_trims_fields_and_omits_empty_tags(self):
         note = self.service.create_note("  A title  ", "  A body  ", [" ", "Useful Tag"])
         self.assertEqual((note.title, note.body), ("A title", "A body"))
@@ -63,6 +72,14 @@ class ServiceTests(unittest.TestCase):
 
         self.assertTrue(service.delete_note(7))
         repository.delete.assert_called_once_with(7)
+
+    def test_delete_rejects_non_positive_or_non_integer_ids(self):
+        for note_id in (True, False, 0, -1, 1.5, "1", 2**63):
+            with self.subTest(note_id=note_id):
+                with self.assertRaisesRegex(
+                    ValueError, "note id must be a positive integer"
+                ):
+                    self.service.delete_note(note_id)
 
     def test_import_validates_then_delegates_once_to_batch_operation(self):
         repository = Mock()

@@ -63,9 +63,13 @@ def validate_import_payload(payload: Any) -> list[NoteDraft]:
         if not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags):
             raise ImportValidationError(f"{label} tags must be a list of strings")
 
-        cleaned_tags = tuple(
-            cleaned for tag in tags if (cleaned := normalize_tag(tag))
-        )
+        cleaned_tags = []
+        seen_tags = set()
+        for tag in tags:
+            cleaned = normalize_tag(tag)
+            if cleaned and cleaned not in seen_tags:
+                cleaned_tags.append(cleaned)
+                seen_tags.add(cleaned)
         if "createdAt" in item:
             created_at = _canonical_created_at(item["createdAt"], label)
         else:
@@ -74,7 +78,7 @@ def validate_import_payload(payload: Any) -> list[NoteDraft]:
             NoteDraft(
                 title=title.strip(),
                 body=body.strip(),
-                tags=cleaned_tags,
+                tags=tuple(cleaned_tags),
                 created_at=created_at,
             )
         )

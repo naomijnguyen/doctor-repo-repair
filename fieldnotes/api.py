@@ -95,10 +95,18 @@ def handle_request(method: str, path: str, body: bytes, service: NoteService):
     delete_match = re.fullmatch(r"/api/notes/([^/]+)", parsed.path)
     if method == "DELETE" and delete_match:
         raw_note_id = delete_match.group(1)
-        if not raw_note_id.isascii() or not raw_note_id.isdigit() or int(raw_note_id) < 1:
+        if (
+            not raw_note_id.isascii()
+            or not raw_note_id.isdigit()
+            or len(raw_note_id) > 19
+        ):
             return _error(400, "invalid_note_id", "note id must be a positive integer")
         note_id = int(raw_note_id)
-        if service.delete_note(note_id):
+        try:
+            deleted = service.delete_note(note_id)
+        except ValueError:
+            return _error(400, "invalid_note_id", "note id must be a positive integer")
+        if deleted:
             return 204, {}, b""
         return _error(404, "note_not_found", "note not found")
 

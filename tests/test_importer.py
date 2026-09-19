@@ -108,6 +108,20 @@ class ImportTests(unittest.TestCase):
         self.assertEqual(drafts[1].created_at, "2026-09-12T21:00:00+00:00")
         self.assertFalse(hasattr(drafts[0], "id"))
 
+    def test_import_deduplicates_normalized_tags_in_first_seen_order(self):
+        drafts = validate_import_payload(
+            {
+                "notes": [
+                    {
+                        "title": "One",
+                        "tags": ["Deep Learning", "deep-learning", "AI", " ai "],
+                    }
+                ]
+            }
+        )
+
+        self.assertEqual(drafts[0].tags, ("deep-learning", "ai"))
+
     def test_missing_timestamp_is_assigned_in_utc(self):
         fixed = datetime(2026, 9, 12, 20, 30, tzinfo=timezone.utc)
         with patch("fieldnotes.importer._utc_now", return_value=fixed):
