@@ -224,6 +224,8 @@ adapter. That is assigned to the next HTTP-boundary pass.
 
 `fieldnotes.server.Handler`:
 
+- serves browser assets for non-API GET requests from the repository's `web/`
+  directory;
 - parses and bounds `Content-Length` before reading request bodies;
 - limits bodies to 1,000,000 bytes;
 - delegates supported methods to `handle_request()`;
@@ -234,6 +236,10 @@ adapter. That is assigned to the next HTTP-boundary pass.
 `handler_for(service)` creates a handler subclass bound to the composed service.
 This avoids a module-global repository and makes the selected state owner
 explicit.
+
+The normal launch command serves the UI and API from one loopback origin.
+`web/api.js` therefore uses relative API paths and follows a configured server
+port automatically.
 
 `build_server()` parses the selected port before constructing storage. If socket
 binding fails after repository creation, it closes the repository. `main()` owns
@@ -265,8 +271,8 @@ The command defaults to the configured API port and supports an explicit
 `textContent`; note data is not interpolated into active HTML. It renders empty,
 loading, saving, deleting, searching, success, and error states.
 
-`web/api.js` centralizes requests and converts non-success responses into
-JavaScript errors. It currently hardcodes `http://127.0.0.1:8000`.
+`web/api.js` centralizes same-origin requests and converts non-success responses
+into JavaScript errors.
 
 The remaining browser work is behavioral rather than cosmetic: coordinate every
 list/search/refresh response, preserve drafts typed during slow saves, and report

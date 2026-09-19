@@ -20,8 +20,9 @@ flowchart LR
     SQLite --> Database[("Configured SQLite file")]
 ```
 
-The current browser files are served separately during development, but they do
-not own note state. `web/api.js` sends every read and mutation to the API.
+The HTTP server serves the browser files and API from one loopback origin.
+`web/api.js` uses relative paths for every read and mutation; browser state does
+not own note state.
 
 ## Layer responsibilities
 
@@ -83,7 +84,9 @@ FIELDNOTES_PORT=8000
 FIELDNOTES_DATA=./data/fieldnotes.sqlite3
 ```
 
-The server binds only to `127.0.0.1`.
+The server binds only to `127.0.0.1` and serves both the UI and API. A real-server
+regression test fetches the page, JavaScript client, and API from that one
+process.
 
 ## Ordinary request flow
 

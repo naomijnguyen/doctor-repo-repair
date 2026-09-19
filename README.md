@@ -2,6 +2,8 @@
 
 > **A multi-agent architecture repair experiment**
 
+**Jennifer Naomi Nguyen** · agent orchestration · built with Claude Code and Codex
+
 Bootwitch Doctor documents how I coordinated five coding agents to diagnose and
 repair a deliberately chaotic repository. The repair subject, **Field Notes**,
 is a small local-first workspace for capturing research notes before they are
@@ -42,21 +44,16 @@ uses SQLite.
 
 ## Run locally
 
-Start the API from the repository root:
+Start the Field Notes UI and API from the repository root:
 
 ```bash
 python3 -m fieldnotes.server
 ```
 
-In a second terminal, serve the browser files:
+Open `http://127.0.0.1:8000`. The same loopback-only process serves the browser
+files and API, so there is no second local server to start or keep alive.
 
-```bash
-python3 -m http.server 8080 --directory web
-```
-
-Open `http://127.0.0.1:8080`.
-
-The API binds to `127.0.0.1:8000` and stores notes in
+The application binds to `127.0.0.1:8000` and stores notes in
 `./data/fieldnotes.sqlite3` by default. Runtime databases and SQLite sidecars are
 ignored by Git.
 
@@ -67,8 +64,8 @@ FIELDNOTES_DATA=/path/to/notes.sqlite3 python3 -m fieldnotes.server
 FIELDNOTES_PORT=9000 python3 -m fieldnotes.server
 ```
 
-The static browser currently targets port 8000, so the custom-port setting is
-most useful for direct API and CLI work until the same-origin runtime is added.
+The browser uses same-origin API paths, so `FIELDNOTES_PORT` changes the UI and
+API port together. Open the corresponding loopback URL after changing it.
 
 ## Import notes
 

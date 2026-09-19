@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from urllib.parse import urlparse
 
 from .api import handle_request
@@ -13,6 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("fieldnotes")
 
 MAX_BODY_BYTES = 1_000_000
+WEB_ROOT = Path(__file__).resolve().parents[1] / "web"
 
 
 def is_allowed_origin(origin):
@@ -36,7 +38,7 @@ def is_allowed_origin(origin):
         and port is not None
     )
 
-class Handler(BaseHTTPRequestHandler):
+class Handler(SimpleHTTPRequestHandler):
     service: NoteService
 
     def _cors_origin(self):
@@ -91,7 +93,12 @@ class Handler(BaseHTTPRequestHandler):
             "Access-Control-Allow-Headers": "Content-Type",
         })
 
-    do_GET = _handle
+    def do_GET(self):
+        if urlparse(self.path).path.startswith("/api/"):
+            self._handle()
+            return
+        super().do_GET()
+
     do_POST = _handle
     do_DELETE = _handle
 
@@ -103,7 +110,8 @@ def handler_for(service: NoteService):
     """Bind one composed service to all handlers created by an HTTP server."""
 
     class ServiceHandler(Handler):
-        pass
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, directory=str(WEB_ROOT), **kwargs)
 
     ServiceHandler.service = service
     return ServiceHandler
@@ -126,7 +134,7 @@ def build_server(port: int | None = None, data_path=None):
 def main():
     server, repository = build_server()
     port = server.server_address[1]
-    logger.info("Field Notes listening on http://127.0.0.1:%s", port)
+    logger.info("Field Notes UI and API listening on http://127.0.0.1:%s", port)
     try:
         server.serve_forever()
     finally:

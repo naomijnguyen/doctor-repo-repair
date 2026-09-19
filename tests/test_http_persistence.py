@@ -102,6 +102,10 @@ class ServerProcess:
                 return None
             return json.loads(response.read())
 
+    def request_text(self, path: str):
+        with urlopen(f"{self.base_url}{path}", timeout=1) as response:
+            return response.status, response.headers, response.read().decode()
+
 
 class HttpPersistenceTests(unittest.TestCase):
     def setUp(self):
@@ -119,6 +123,22 @@ class HttpPersistenceTests(unittest.TestCase):
     def tearDown(self):
         for server in reversed(self.servers):
             server.stop()
+
+    def test_one_process_serves_ui_assets_and_api(self):
+        server = self.start_server()
+
+        status, headers, index = server.request_text("/")
+        self.assertEqual(status, 200)
+        self.assertIn("text/html", headers["Content-Type"])
+        self.assertIn("<title>Field Notes</title>", index)
+
+        status, headers, javascript = server.request_text("/api.js")
+        self.assertEqual(status, 200)
+        self.assertIn("javascript", headers["Content-Type"])
+        self.assertIn('fetch(path, options)', javascript)
+        self.assertNotIn("127.0.0.1:8000", javascript)
+
+        self.assertEqual(server.request("GET", "/api/notes"), {"notes": []})
 
     def test_create_and_delete_survive_real_process_restarts(self):
         first_server = self.start_server()
