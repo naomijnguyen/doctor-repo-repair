@@ -11,6 +11,7 @@ the in-memory repository is retained for tests.
 flowchart LR
     Browser["Browser UI<br/>web/"] --> Client["HTTP client<br/>web/api.js"]
     Import["Import command<br/>tools/import_sample.py"] --> HTTP
+    Export["Export command<br/>tools/export_notes.py"] --> HTTP
     Client --> HTTP["Local HTTP server<br/>fieldnotes/server.py"]
     HTTP --> API["Route adapter<br/>fieldnotes/api.py"]
     API --> Service["Business rules<br/>fieldnotes/service.py"]
@@ -18,6 +19,7 @@ flowchart LR
     Contract --> SQLite["SQLite runtime adapter"]
     Contract -.-> Memory["In-memory test adapter"]
     SQLite --> Database[("Configured SQLite file")]
+    HTTP --> ExportFile["Atomic portable JSON"]
 ```
 
 The HTTP server serves the browser files and API from one loopback origin.
@@ -32,6 +34,8 @@ not own note state.
 - `web/api.js` contains the browser's HTTP calls and response-error translation.
 - `tools/import_sample.py` reads one JSON document and submits it to the running
   API without applying a second copy of the domain rules.
+- `tools/export_notes.py` reads one document from the running API and publishes
+  it through `fieldnotes.exporter` without opening SQLite as another writer.
 - `fieldnotes/server.py` is the process entry point and HTTP transport boundary.
 
 ### Application boundary
@@ -104,6 +108,11 @@ Create validation and tag cleanup happen in the service before
 domain objects. Delete returns a boolean from storage, which the API translates
 to `204` or `404`.
 
+Before dispatching a mutation, the live server verifies any browser `Origin`
+against the actual loopback origin. JSON POST routes require the intended media
+type, oversized bodies stop before parsing, and unsupported API methods remain
+inside the structured JSON error contract.
+
 Unexpected application exceptions cross into the server's generic structured
 `500 internal_error` response instead of leaking internal details.
 
@@ -130,6 +139,37 @@ The service validates every item before calling storage. SQLite then holds one
 Python lock and one database transaction across the complete batch. A failure on
 a later insertion rolls back earlier insertions from that request. The operation
 is atomic for one request, but not idempotent after an ambiguous lost response.
+
+## Atomic export and recovery flow
+
+```mermaid
+flowchart LR
+    DB[("Populated SQLite")] --> API["GET /api/export"]
+    API --> CLI["Export command"]
+    CLI --> Temp["Complete temporary sibling"]
+    Temp --> Publish["Atomic link or replace"]
+    Publish --> JSON["Portable notes JSON"]
+    JSON --> Import["Real import command"]
+    Import --> Fresh[("Separate empty SQLite")]
+    Fresh --> Restart["New server process"]
+    Restart --> Same["Equivalent public fields"]
+```
+
+The default path uses an atomic hard link and refuses an existing destination
+without a check-then-write race. `--replace` flushes a complete temporary sibling
+before `os.replace()`. Failure removes the temporary file and preserves the
+previous destination bytes.
+
+Recovery compares ordered titles, bodies, tags, and timestamps. IDs are local
+database identities and are excluded from cross-database equality.
+
+## Browser request-state boundary
+
+Every list, search, or post-mutation refresh receives a monotonically increasing
+generation. Only the newest generation may render or publish an error. A save
+clears a submitted field only if the user has not changed it while the request
+was pending. Confirmed mutation success is recorded before refresh, so refresh
+failure cannot relabel a committed write as failed.
 
 ## Data ownership and schema
 
@@ -180,25 +220,23 @@ The current suite verifies the architecture at several levels:
 - shared repository conformance tests for memory and SQLite;
 - transaction tests with controlled SQLite trigger failures;
 - real server subprocess tests using public HTTP;
-- complete stop/restart tests against the same configured database; and
-- real CLI import followed by API retrieval, restart, rollback, and retry.
+- complete stop/restart tests against the same configured database;
+- real CLI import followed by API retrieval, restart, rollback, and retry;
+- real export and import commands using two database files and a restart;
+- live-socket trust-boundary checks that also assert unchanged state;
+- deterministic JavaScript request-state tests; and
+- a real headless-Chrome workflow at desktop and narrow widths.
 
-The first repair milestone passes 89 tests. The useful claim is not the number;
-it is that the tests cross the process, persistence, and failure boundaries shown
-in these diagrams.
+The current gate passes 110 Python tests plus 2 JavaScript state tests. The useful
+claim is not the number; it is that the tests cross process, persistence,
+filesystem-publication, browser event-loop, and failure boundaries.
 
 ## Current outer boundary
 
-The durable lower path is connected. The next architecture work is outside that
-core:
+The agreed local-beta path is connected. Remaining boundaries are deliberately
+outside this wave: idempotent retry after an unknown post-commit response,
+arbitrary external multi-process writers, and a hosted trust/deployment model.
 
-- portable atomic export and recovery;
-- origin and media-type enforcement for mutation requests;
-- consistent JSON handling for unsupported HTTP methods;
-- coordinated browser mutation, refresh, and search state;
-- browser-level acceptance coverage; and
-- one same-origin or otherwise coherent local startup path.
-
-These are tracked in [`../agents/NEXT_WAVE.md`](../agents/NEXT_WAVE.md). The
-pre-repair source snapshot remains in
-[`ARCHITECTURE_AS_IS.md`](ARCHITECTURE_AS_IS.md) for comparison.
+The pre-repair source snapshot remains in
+[`ARCHITECTURE_AS_IS.md`](ARCHITECTURE_AS_IS.md) for comparison, and the exact
+broken fixture is retained at Git commit `1884f4d`.

@@ -4,14 +4,11 @@ Agent 1 maintains the consolidated sections in this file. Other agents should wr
 
 ## Current Verified State
 
-- Branch observed: `codex/field-notes-triage`.
+- Branch observed for the second-wave gate: `codex/second-wave-verification`.
 - Baseline commit: `1884f4d785f2c3042792d45854e06c0837599408`.
-- The working tree contains intentional uncommitted changes from prior agents.
-- Three earlier agents completed broad repository exploration; the new assignments should investigate their specific connection rather than repeat the inventory.
-- `./scripts/check.sh` most recently passed 89 tests after the atomic import,
-  one-request command, hold regressions, and Agent 5's public import-connection
-  tests arrived. Python compilation, frontend syntax checks, and
-  `git diff --check` also pass.
+- The first-wave 89-test checkpoint is preserved in the historical entries below.
+- `./scripts/check.sh` now passes 110 Python tests plus 2 JavaScript state tests.
+  The separate real-Chrome acceptance runner also passes.
 - The import command now sends one complete payload to `POST /api/import`; it no
   longer posts each note separately.
 - Imported notes are visible through `GET /api/notes` and Agent 1 has verified
@@ -22,6 +19,8 @@ Agent 1 maintains the consolidated sections in this file. Other agents should wr
 - The running server now uses configured SQLite storage. Agent 1 verified that
   an HTTP-created note survived a complete server restart with its ID, tags,
   and timestamp unchanged; an HTTP deletion also survived a second restart.
+- Export/recovery, same-origin startup, the loopback trust guard, and coordinated
+  browser request state are verified in the appended second-wave entry.
 
 ## Accepted Decisions
 
@@ -344,3 +343,25 @@ batch prints only after the complete response; imported timestamps survive; and 
 failed batch prints no partial success.
 
 Status: resolved by Agent 4's `ApiImportClient` and seven focused command tests.
+
+## 2026-09-18 second-wave integration entry
+
+- Accepted export contract: `GET /api/export` returns the portable `notes`
+  document; the real command publishes a complete temporary sibling atomically,
+  refuses existing destinations by default, and requires `--replace` for an
+  intentional replacement.
+- Agent 5 connection evidence uses two distinct SQLite files and real export and
+  import commands. Ordered titles, bodies, tags, and timestamps survive a new
+  destination process; IDs remain local.
+- The loopback trust boundary now rejects foreign and opaque browser mutation
+  origins, requires JSON media type on JSON POST routes, and keeps unsupported
+  API methods inside structured JSON responses. Real-socket tests assert zero
+  mutation on failure.
+- Browser state uses one read generation and submitted-value comparison. The
+  real Chrome flow proves slow-save preservation, latest-search-wins, honest
+  mutation/refresh messaging, delete, and narrow/desktop layout.
+- Current gate: 110 Python tests, 2 JavaScript state tests, and the separate real
+  Chrome acceptance command pass.
+- Scope limit: delegated independent audits could not run because the account's
+  subagent usage limit was reached. Do not describe this wave as independently
+  reviewed by those subagents.

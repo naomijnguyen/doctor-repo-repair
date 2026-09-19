@@ -27,10 +27,15 @@ architecture in
 - Store titles, plain-text bodies, normalized tags, and UTC timestamps.
 - Keep committed notes and deletions across complete server restarts.
 - Import a JSON file as one all-or-nothing batch.
+- Export readable UTF-8 JSON atomically and recover it into a separate database.
 - Reject invalid later records before storage changes begin.
 - Roll back the whole batch when storage fails after an insert has started.
 - Refuse corrupt or incompatible databases instead of silently replacing them
   or falling back to temporary memory.
+- Serve the browser and API from one loopback origin, reject foreign browser
+  mutations, and require JSON media types on JSON mutation routes.
+- Preserve newer drafts and search results when browser requests finish out of
+  order.
 
 The browser and import command use the running API as their shared authority.
 The in-memory repository remains as a fast test adapter; the application runtime
@@ -93,16 +98,42 @@ The file format is UTF-8 JSON with a top-level `notes` array:
 The command sends the complete document to `POST /api/import`. The server owns
 semantic validation, and SQLite publishes the batch in one transaction.
 
+## Export and recover notes
+
+With the application running:
+
+```bash
+python3 tools/export_notes.py notes-backup.json
+```
+
+The command reads `GET /api/export` through the running application and writes a
+temporary sibling before atomically publishing the destination. It refuses to
+overwrite an existing file unless `--replace` is supplied intentionally.
+
+The exported top-level `notes` document is accepted by the import command. A
+round-trip process test exports a populated database, imports into a separate
+empty database, restarts the destination server, and compares titles, bodies,
+tags, and timestamps. IDs remain database-local.
+
 ## Verify the project
 
 ```bash
 ./scripts/check.sh
 ```
 
-The check compiles the Python package, checks frontend JavaScript syntax when
-Node.js is available, and runs the complete unittest suite. The first
-multi-agent repair milestone passes 89 tests, including real CLI, HTTP,
-controlled-failure, and process-restart coverage.
+The check compiles the Python package, checks frontend JavaScript syntax, runs
+two deterministic browser-state tests when Node.js is available, and runs the
+complete 110-test Python suite. The evidence includes real CLI, HTTP, atomic
+filesystem publication, controlled-failure, and process-restart coverage.
+
+Run the real Chrome acceptance flow separately:
+
+```bash
+node scripts/browser_acceptance.mjs
+```
+
+It drives create, delayed save, out-of-order search, refresh failure, delete,
+desktop layout, and narrow layout through the locally running application.
 
 ## Repository map
 
@@ -148,8 +179,11 @@ commits, versioning, and pushes.
 
 ## Next pass
 
-The durable data path is complete for the current milestone. The next focused
-work is portable atomic export, stricter local HTTP mutation rules, coordinated
-browser request state, browser-level testing, and one coherent local UI/API
-startup path. Those assignments are mapped in
-[`agents/NEXT_WAVE.md`](agents/NEXT_WAVE.md).
+The two repair waves are complete for the local beta contract. The original
+broken fixture remains reproducible at
+[`1884f4d`](https://github.com/naomijnguyen/doctor-repo-repair/tree/1884f4d),
+while the default branch remains runnable and repaired.
+
+Explicitly deferred work includes retry idempotency after an unknown
+post-commit response, broader multi-process write guarantees, and a hosted trust
+model beyond this loopback-only application.

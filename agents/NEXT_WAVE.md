@@ -1,5 +1,11 @@
 # Field Notes: Second-Wave Agent Assignments
 
+> **Completion note (2026-09-18):** The agreed second-wave local-beta contract
+> is implemented and verified. The canonical gate passes 110 Python tests plus
+> 2 JavaScript state tests, and `node scripts/browser_acceptance.mjs` passes the
+> real Chrome workflow. The assignments below are retained as the plan that
+> defined ownership and acceptance.
+
 ## Shared objective
 
 Move Field Notes from a durable lower-path repair to a coherent local beta.
@@ -7,9 +13,9 @@ Preserve the verified CLI -> HTTP -> service -> SQLite path while adding portabl
 export, tightening the local trust boundary, and making browser state honest
 under slow or failed requests.
 
-The current canonical check passes 89 tests. Every agent must inspect the live
-working tree before acting; historical triage and agent notes are evidence, not
-proof of current behavior.
+At assignment time, the canonical check passed 89 tests. Every agent was required
+to inspect the live working tree before acting; historical triage and agent notes
+were evidence, not proof of current behavior.
 
 ## Coordination order
 

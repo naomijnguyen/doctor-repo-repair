@@ -793,3 +793,92 @@ Keep all changes listed under **Accepted**. Before treating the complete working
 ### FN-LEAD - As-built architecture review draft (2026-09-13T03:20:18.951Z)
 
 Added `docs/ARCHITECTURE_AS_IS.md` as a separate review draft. It maps the actual browser/API/service/repository/import paths and distinguishes current process-local storage from README_INTENT.md goals such as SQLite, export, and single-command startup. Existing docs/ARCHITECTURE.md and other agents files are unchanged by this task. No application implementation, Git staging, commit, or deployment. This entry is append-only. The working branch changed externally to codex/field-notes-triage during inspection; this task did not switch branches. Relative document links were checked before saving.
+
+## Second-wave re-triage and resolution — 2026-09-18
+
+### Live baseline
+
+- Repository home: `/Users/jennifer/Bootwitch/Projects/doctor-repo-repair`.
+- Starting public revision: `7e3b718` on `main`; the first repair milestone is
+  `7c18e13`, and the deliberately broken fixture remains `1884f4d`.
+- Baseline canonical check: 89 Python tests passed. A concurrent same-origin
+  startup repair added one subprocess test, producing a 90-test intermediate
+  gate.
+- The original `field-notes-chaos-lab` path no longer existed. The commit graph,
+  source tree, and configured GitHub remote established this repository as the
+  migrated project rather than relying on the old path name.
+
+### SW-C01 — Portable export was absent
+
+- Observed: no export route, command, filesystem publisher, or recovery test.
+- Accepted contract: `GET /api/export` returns the portable top-level `notes`
+  document. The command reads through the running application. Default
+  publication refuses an existing destination; `--replace` is explicit.
+- Resolution: `fieldnotes/exporter.py` writes and fsyncs a temporary sibling,
+  then publishes atomically. Failure removes the temporary and preserves prior
+  destination bytes.
+- Connection proof: the real export command reads a populated configured SQLite
+  server; the real import command restores the result into a separate empty
+  database; a new destination process returns equivalent ordered public fields
+  and timestamps. IDs remain database-local.
+- Status: **green**.
+
+### SW-C02 — HTTP origin and media-type checks did not prevent writes
+
+- Observed: CORS response headers were withheld for foreign origins, but POST and
+  DELETE still mutated state. `Origin: null` was accepted, and JSON routes
+  accepted missing or unrelated media types. `PATCH` returned HTML `501`.
+- Resolution: browser origins must match the actual loopback host and port;
+  opaque/foreign origins fail before mutation. CLI calls without `Origin` remain
+  valid. JSON POST routes require `application/json`. `PUT` and `PATCH` reach the
+  JSON API contract.
+- Connection proof: real-socket tests assert both structured responses and the
+  resulting public state for create, delete, media type, preflight, unsupported
+  method, and oversized-body cases.
+- Status: **green for the documented loopback topology**. This is not a hosted
+  security policy.
+
+### SW-C03 — Browser request completion order could lie to the user
+
+- Observed: `form.reset()` erased newer text typed during a slow save; mutation
+  refreshes bypassed the search generation guard; a committed mutation followed
+  by refresh failure was presented as mutation failure.
+- Resolution: one read-generation authority governs list, search, and refresh.
+  Saves clear only fields unchanged since submission. Confirmed mutation success
+  is separated from follow-up refresh failure.
+- Evidence: two deterministic Node tests cover generation and draft clearing. A
+  real headless-Chrome runner covers delayed save, out-of-order search, committed
+  save plus failed refresh, delete, clean console, and 390px/desktop layouts.
+- Status: **green**.
+
+### SW-C04 — Domain edge cases crossed the wrong boundary
+
+- Observed: direct deletion accepted booleans, floats, non-positive values, and
+  values outside SQLite's positive integer range. Extremely long numeric path
+  IDs could reach integer/storage behavior. Equivalent normalized tags remained
+  duplicated.
+- Resolution: service deletion accepts only positive non-boolean SQLite-range
+  integers. The route rejects oversized numeric IDs as `400 invalid_note_id`.
+  Create and import deduplicate normalized tags in first-seen order.
+- Status: **green** through focused service, importer, and public API tests.
+
+### SW-C05 — Local topology was split across two processes
+
+- Observed at second-wave start: docs required a separate static file server and
+  the browser hardcoded API port 8000.
+- Concurrent repair accepted: one loopback process serves `web/` and `/api/*`;
+  the browser uses relative requests and follows `FIELDNOTES_PORT`.
+- Proof: real subprocess fetches HTML, JavaScript, and API from one origin.
+- Status: **green**.
+
+### Integrated gate and remaining limits
+
+- `./scripts/check.sh`: 110 Python tests plus 2 JavaScript state tests pass.
+- `node scripts/browser_acceptance.mjs`: all real-Chrome checks pass.
+- Import error responses are explicitly closed; the Python 3.14 resource warning
+  observed at baseline is gone.
+- Deferred by contract: idempotency after an unknown post-commit import response,
+  comprehensive external multi-process write behavior, and hosted-origin policy.
+- Independent subagents were requested for export, runtime, and browser audits,
+  but the account-wide subagent usage limit prevented those runs. No independent
+  report is claimed; black-box evidence is labeled by the boundary it crosses.

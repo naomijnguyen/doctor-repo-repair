@@ -207,5 +207,7 @@ application. We mapped the existing system, traced failures backward from
 observable outcomes, divided repairs by architectural boundary, and re-ran the
 forward and backward traces after each accepted connection. The final system
 replaced disconnected in-memory paths with one SQLite-backed runtime and an
-atomic import flow, verified through 89 tests spanning HTTP, CLI, transaction
-failure, concurrency, and complete process restarts.
+atomic import flow. A second wave added portable atomic export, loopback request
+hardening, one-process startup, and honest browser request ordering. The current
+gate passes 110 Python tests plus 2 JavaScript state tests, with a separate real
+Chrome acceptance flow spanning delayed and failed responses.

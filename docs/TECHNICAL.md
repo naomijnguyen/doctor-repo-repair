@@ -15,8 +15,9 @@ runtime:
 - `dataclasses` for domain values; and
 - `threading.Lock` for repository-level process concurrency.
 
-Node.js is optional and is used by `scripts/check.sh` only to syntax-check the
-frontend JavaScript.
+Node.js is optional and is used by `scripts/check.sh` to syntax-check frontend
+JavaScript and run two deterministic request-state tests. The separate Chrome
+acceptance runner uses Node's built-in DevTools-protocol support.
 
 Package and source versions are both `0.4.0`.
 
@@ -52,8 +53,9 @@ the validation layer.
 
 `fieldnotes.utils.normalize_tag()` is the canonical tag function used by normal
 creation and import. The service trims title and body text, turns internal tag
-whitespace into hyphenated input, discards empty normalized tags, and delegates
-the clean values to its repository.
+whitespace into hyphenated input, discards empty normalized tags, deduplicates
+equivalent normalized values in first-seen order, and delegates the clean values
+to its repository. Import applies the same deduplication rule.
 
 Search normalizes both the query and a combined title/body/tag haystack. A blank
 query returns the full repository list.
@@ -175,6 +177,10 @@ subclass. The API maps that known client failure to `400 invalid_request`.
 Repository `ValueError` exceptions are intentionally not caught there, so an
 unexpected storage failure reaches the server's generic `500` boundary.
 
+Create and import record objects currently ignore unknown fields. Source `id` is
+one intentional example: it may travel through a portable document, but the
+destination repository assigns local identity. Unknown fields are not persisted.
+
 ### Atomic publication
 
 `NoteService.import_notes()` validates first and calls `repository.add_many()`
@@ -202,6 +208,7 @@ POST   /api/notes
 DELETE /api/notes/:id
 GET    /api/search?q=...
 POST   /api/import
+GET    /api/export
 ```
 
 Public errors use a nested shape:
@@ -215,10 +222,9 @@ Public errors use a nested shape:
 }
 ```
 
-Known routes with wrong methods return `405` at the adapter boundary. A current
-transport limitation is that methods without a `BaseHTTPRequestHandler` method,
-such as `PUT`, can still receive the base server's HTML `501` before reaching the
-adapter. That is assigned to the next HTTP-boundary pass.
+Known routes with wrong methods return `405`. The server dispatches `PUT` and
+`PATCH` through the adapter so unsupported API methods use JSON rather than the
+base handler's HTML `501` page.
 
 ## HTTP server and lifecycle
 
@@ -229,9 +235,11 @@ adapter. That is assigned to the next HTTP-boundary pass.
 - parses and bounds `Content-Length` before reading request bodies;
 - limits bodies to 1,000,000 bytes;
 - delegates supported methods to `handle_request()`;
+- rejects mismatched or opaque browser origins before mutation;
+- requires `application/json` for JSON POST routes;
 - converts unexpected exceptions to a generic JSON `500`;
 - emits `Content-Length`; and
-- supplies local CORS headers for recognized origins.
+- supplies local CORS headers only for the actual same origin.
 
 `handler_for(service)` creates a handler subclass bound to the composed service.
 This avoids a module-global repository and makes the selected state owner
@@ -245,10 +253,10 @@ port automatically.
 binding fails after repository creation, it closes the repository. `main()` owns
 normal server and repository shutdown.
 
-The current CORS behavior is suitable only for the documented local prototype.
-Preflight rejects unknown origins, but mutation methods do not yet reject the
-request itself when the origin is disallowed. `Origin: null` is also accepted for
-the older direct-file workflow. Both are intentionally named next-pass work.
+The trust boundary is deliberately local. Requests without `Origin` remain valid
+for CLI clients. Browser requests carrying `Origin` must match the current
+loopback server's host and port; foreign origins and `Origin: null` are rejected
+before state changes.
 
 ## Import command
 
@@ -265,6 +273,21 @@ the older direct-file workflow. Both are intentionally named next-pass work.
 The command defaults to the configured API port and supports an explicit
 `--api-url` for tests or another local server.
 
+## Export command and atomic publication
+
+`tools/export_notes.py` reads `GET /api/export` from the running application.
+`fieldnotes.exporter.write_export()` serializes readable UTF-8 JSON into a
+temporary sibling, flushes and fsyncs it, then publishes once:
+
+- default mode uses an atomic hard link and refuses an existing destination;
+- `--replace` uses `os.replace()` only after the new file is complete; and
+- any exception removes the temporary sibling while preserving prior bytes.
+
+The black-box recovery test uses a populated source database, the real export
+command, a distinct empty destination database, the real import command, and a
+new destination server process. It compares ordered public fields and timestamps;
+IDs are assigned locally and are not portable identity.
+
 ## Browser implementation
 
 `web/app.js` builds note elements with DOM methods and assigns user content with
@@ -274,9 +297,11 @@ loading, saving, deleting, searching, success, and error states.
 `web/api.js` centralizes same-origin requests and converts non-success responses
 into JavaScript errors.
 
-The remaining browser work is behavioral rather than cosmetic: coordinate every
-list/search/refresh response, preserve drafts typed during slow saves, and report
-a committed mutation separately from a failed follow-up refresh.
+`web/request-state.js` supplies the generation and submitted-draft primitives.
+Every collection read receives a generation, and only the newest may render or
+report an error. A completed save clears only fields that still equal their
+submitted values, preserving newer edits. Mutation success is reported before a
+follow-up refresh, so refresh failure cannot mislabel a committed write.
 
 ## Verification map
 
@@ -290,6 +315,10 @@ a committed mutation separately from a failed follow-up refresh.
 | Runtime composition | configured path, shared state owner, bind cleanup |
 | Public persistence | real HTTP create/delete across server processes |
 | Public import | real CLI, API retrieval, restart, rollback, and retry |
+| Public export/recovery | real export and import commands, two databases, restart |
+| Atomic filesystem publication | overwrite race and forced publish failure preserve prior bytes |
+| HTTP trust boundary | real socket origin, media-type, method, and body-limit checks |
+| Browser ordering | generation/draft unit tests plus delayed real-Chrome workflows |
 | Concurrency | ordinary add raced against a contiguous 40-note batch |
 
 Run all current checks with:
@@ -298,15 +327,16 @@ Run all current checks with:
 ./scripts/check.sh
 ```
 
-The first repair milestone passes 89 tests. Browser interaction automation,
-portable export recovery, and the next HTTP trust-boundary cases are not included
-in that claim.
+The current gate passes 110 Python tests and 2 JavaScript state tests. Run the
+separate real-browser flow with `node scripts/browser_acceptance.mjs`.
 
 ## Current design decisions
 
 - SQLite is the runtime state owner; memory is a test adapter.
 - The service receives its repository through composition.
 - Import reaches the application over HTTP rather than opening a second writer.
+- Export also reaches the application over HTTP and publishes locally only after
+  receiving a complete valid response.
 - Source IDs are ignored during import; the destination assigns local IDs.
 - Valid source timestamps preserve their instant; missing timestamps are assigned.
 - An empty import is a successful no-op and does not consume an ID.

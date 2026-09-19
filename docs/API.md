@@ -39,6 +39,11 @@ Body:
 normalizes tags, assigns a UTC timestamp, commits the note, and returns the
 complete stored representation with `201 Created`.
 
+Unknown object fields are currently ignored for both create and individual
+import records. This is an explicit compatibility policy for the local beta, not
+evidence that those fields are stored. Equivalent normalized tags are
+deduplicated in first-seen order.
+
 ## DELETE /api/notes/:id
 
 Returns `204` when deletion commits, `404` when the note does not exist, and
@@ -74,6 +79,27 @@ canonical UTC; missing timestamps are assigned by the application.
 The operation is atomic for one request. A storage failure rolls back the
 complete batch. It is not currently idempotent after an ambiguous lost response.
 
+## GET /api/export
+
+Returns a portable UTF-8 JSON document with a top-level `notes` array and the
+same public note fields shown above. Export reads through the running
+application; the command does not open SQLite as a second state owner.
+
+Source IDs are included for readability but are not recovery identities. Import
+assigns IDs locally in the destination database while preserving note order,
+titles, bodies, tags, and valid timestamps.
+
+## Local request boundary
+
+The application is loopback-only and serves UI and API from one origin.
+Browser mutation requests that include `Origin` must match the actual server
+origin. Foreign origins and `Origin: null` receive `403 origin_not_allowed`
+before mutation. CLI requests without an `Origin` header remain supported.
+
+`POST /api/notes` and `POST /api/import` require an `application/json` media
+type; parameters such as `charset=utf-8` are accepted. Missing or different
+media types receive `415 unsupported_media_type` before mutation.
+
 ## Errors
 
 Errors use:
@@ -86,7 +112,7 @@ Expected validation and routing failures use stable codes and human-readable
 messages. Unexpected application failures are converted by the HTTP server to a
 generic `500 internal_error` response.
 
-Unsupported methods on known routes return `405` when they reach the API
-adapter. Unknown routes return `404`. The base HTTP handler's behavior for
-methods it does not dispatch, such as `PUT`, is a documented next-pass transport
-fix rather than part of the verified adapter claim.
+Unsupported methods on known routes return structured `405` responses through
+the API adapter, including `PUT` and `PATCH`. Unknown routes return `404`.
+Bodies above 1,000,000 bytes return structured `413 request_too_large` before
+the handler reads or mutates application state.

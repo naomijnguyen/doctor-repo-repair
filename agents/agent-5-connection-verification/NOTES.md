@@ -310,3 +310,27 @@ Complete `agents/shared/HANDOFF_TEMPLATE.md` in the agent conversation when evid
 - Scope limit: this verifies local reachability and UI/API composition. It does
   not close the separate trust-boundary, export, or browser request-ordering
   work recorded in the second-wave matrix.
+
+## 2026-09-18 second-wave connection result
+
+- Export/recovery: real populated API and SQLite -> real export command ->
+  portable JSON -> real import command -> separate empty SQLite -> complete
+  destination restart preserves ordered public fields and timestamps.
+- Export failure: existing destination remains byte-for-byte identical without
+  explicit replacement; forced publication failure preserves old bytes and
+  removes the temporary sibling.
+- HTTP boundary: live-socket tests prove allowed same-origin JSON mutation and
+  zero mutation for foreign/opaque origins, wrong media types, oversized bodies,
+  and disallowed deletion. Unsupported methods return JSON `405`.
+- Browser boundary: deterministic state tests plus real headless Chrome prove
+  slow-save draft preservation, newest-read publication, honest committed-save
+  messaging after refresh failure, delete, and desktop/narrow layouts.
+- Integrated result: 110 Python tests and 2 JavaScript state tests pass;
+  `node scripts/browser_acceptance.mjs` passes separately.
+- Hygiene: process, browser, database, export, and sidecar artifacts are created
+  only under temporary directories and removed. The pre-existing untracked
+  `field-notes-chaos-lab.zip` was not created, modified, staged, or claimed by
+  this verification.
+- Independence limitation: requested audit subagents hit the account-wide usage
+  limit before returning evidence. The tests cross real public boundaries, but
+  this run does not claim a separate-agent review of the implementation.

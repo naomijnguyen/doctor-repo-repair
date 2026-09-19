@@ -255,8 +255,36 @@ flowchart TD
     Export --> Redraw["Redraw forward and backward traces"]
 ```
 
-Everything through `Visibility` is implemented and verified. `Export` is the
-next red connection; redraw follows its acceptance evidence.
+At the first-wave checkpoint, everything through `Visibility` was implemented
+and verified while `Export` remained the next red connection. The accepted
+second-wave redraw follows.
+
+## 7. Second-Wave Accepted Architecture — 2026-09-18
+
+```mermaid
+flowchart LR
+    Browser["Browser UI<br/>generation-controlled"] --> Guard["Same-origin HTTP guard"]
+    Import["Import command"] --> Guard
+    Export["Export command"] --> Guard
+    Guard --> API["JSON API"]
+    API --> Service["Note service"]
+    Service --> SQLite[("Configured SQLite")]
+    API --> ExportDoc["Portable notes document"]
+    ExportDoc --> Publisher["Atomic filesystem publisher"]
+    Publisher --> Recovery["Separate database recovery"]
+
+    classDef verified fill:#dcfce7,stroke:#15803d,color:#14532d,stroke-width:2px
+    class Browser,Guard,Import,Export,API,Service,SQLite,ExportDoc,Publisher,Recovery verified
+```
+
+Forward proof: browser/import/export entry points reach the same loopback
+authority; mutations reach configured SQLite; export reaches one complete atomic
+publication. Backward proof: a note visible after destination restart traces to
+the exported public fields, real import request, and committed destination rows.
+
+All nodes and arrows above are green only for the tested local-beta scope. Hosted
+origins, ambiguous-response idempotency, and arbitrary external multi-process
+writers remain outside the accepted claim.
 
 ## Trace Update Standard
 

@@ -9,7 +9,8 @@
 - [`API.md`](API.md) documents the public HTTP contract.
 - [`REPAIR_JOURNEY.md`](REPAIR_JOURNEY.md) tells the before, intermediate, and
   after story, including Jennifer's orchestration decisions.
-- [`STATUS.md`](STATUS.md) separates working behavior from the next beta tasks.
+- [`STATUS.md`](STATUS.md) separates verified local-beta behavior from explicit
+  remaining limits.
 - [`../README_INTENT.md`](../README_INTENT.md) records the product target and
   acceptance requirements.
 
