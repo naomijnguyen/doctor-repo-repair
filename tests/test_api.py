@@ -188,9 +188,15 @@ class ApiTests(unittest.TestCase):
         repository.add_many.assert_called_once()
 
     def test_cors_origin_is_limited_to_local_ui(self):
-        self.assertTrue(is_allowed_origin("null"))
+        self.assertFalse(is_allowed_origin("null"))
         self.assertTrue(is_allowed_origin("http://localhost:3000"))
         self.assertTrue(is_allowed_origin("http://127.0.0.1:8000"))
+        self.assertTrue(
+            is_allowed_origin("http://127.0.0.1:8000", "127.0.0.1:8000")
+        )
+        self.assertFalse(
+            is_allowed_origin("http://127.0.0.1:8001", "127.0.0.1:8000")
+        )
         self.assertFalse(is_allowed_origin("https://example.com"))
         self.assertFalse(is_allowed_origin("http://localhost.example.com:8000"))
         self.assertFalse(is_allowed_origin("http://localhost"))

@@ -17,10 +17,7 @@ MAX_BODY_BYTES = 1_000_000
 WEB_ROOT = Path(__file__).resolve().parents[1] / "web"
 
 
-def is_allowed_origin(origin):
-    if origin == "null":
-        # Browsers use this origin when web/index.html is opened directly.
-        return True
+def is_allowed_origin(origin, host=None):
     if not origin:
         return False
     parsed = urlparse(origin)
@@ -28,7 +25,7 @@ def is_allowed_origin(origin):
         port = parsed.port
     except ValueError:
         return False
-    return (
+    allowed = (
         parsed.scheme == "http"
         and parsed.hostname in {"127.0.0.1", "localhost"}
         and parsed.path in {"", "/"}
@@ -37,13 +34,28 @@ def is_allowed_origin(origin):
         and not parsed.fragment
         and port is not None
     )
+    if not allowed:
+        return False
+    return host is None or parsed.netloc.lower() == host.lower()
 
 class Handler(SimpleHTTPRequestHandler):
     service: NoteService
 
     def _cors_origin(self):
         origin = self.headers.get("Origin")
-        return origin if is_allowed_origin(origin) else None
+        return origin if is_allowed_origin(origin, self.headers.get("Host", "")) else None
+
+    def _send_error(self, status, code, message):
+        response = (
+            '{"error":{"code":"%s","message":"%s"}}' % (code, message)
+        ).encode()
+        self._send(status, {"Content-Type": "application/json"}, response)
+
+    def _mutation_origin_is_allowed(self):
+        origin = self.headers.get("Origin")
+        return origin is None or is_allowed_origin(
+            origin, self.headers.get("Host", "")
+        )
 
     def _send(self, status, headers=None, response=b""):
         self.send_response(status)
@@ -59,6 +71,21 @@ class Handler(SimpleHTTPRequestHandler):
             self.wfile.write(response)
 
     def _handle(self):
+        parsed_path = urlparse(self.path).path
+        if self.command in {"POST", "PUT", "PATCH", "DELETE"}:
+            if not self._mutation_origin_is_allowed():
+                self._send_error(403, "origin_not_allowed", "origin not allowed")
+                return
+        if self.command == "POST" and parsed_path in {"/api/notes", "/api/import"}:
+            media_type = self.headers.get("Content-Type", "").split(";", 1)[0]
+            if media_type.strip().lower() != "application/json":
+                self._send_error(
+                    415,
+                    "unsupported_media_type",
+                    "Content-Type must be application/json",
+                )
+                return
+
         raw_length = self.headers.get("Content-Length", "0")
         try:
             length = int(raw_length)
@@ -101,6 +128,8 @@ class Handler(SimpleHTTPRequestHandler):
 
     do_POST = _handle
     do_DELETE = _handle
+    do_PATCH = _handle
+    do_PUT = _handle
 
     def log_message(self, fmt, *args):
         logger.info(fmt, *args)
