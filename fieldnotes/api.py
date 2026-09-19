@@ -65,6 +65,9 @@ def handle_request(method: str, path: str, body: bytes, service: NoteService):
         query = parse_qs(parsed.query).get("q", [""])[0]
         return _json(200, {"notes": [_note_dict(n) for n in service.search(query)]})
 
+    if method == "GET" and parsed.path == "/api/export":
+        return _json(200, {"notes": [_note_dict(n) for n in service.list_notes()]})
+
     if method == "POST" and parsed.path == "/api/notes":
         try:
             payload = _create_payload(body)
@@ -110,7 +113,12 @@ def handle_request(method: str, path: str, body: bytes, service: NoteService):
             return 204, {}, b""
         return _error(404, "note_not_found", "note not found")
 
-    known_path = parsed.path in {"/api/notes", "/api/search", "/api/import"} or delete_match
+    known_path = parsed.path in {
+        "/api/notes",
+        "/api/search",
+        "/api/import",
+        "/api/export",
+    } or delete_match
     if known_path:
         return _error(405, "method_not_allowed", "method not allowed")
 

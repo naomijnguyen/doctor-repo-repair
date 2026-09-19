@@ -71,6 +71,14 @@ class ApiTests(unittest.TestCase):
         self.assertIn("createdAt", note)
         self.assertNotIn("created_at", note)
 
+    def test_export_returns_portable_public_note_document(self):
+        created = self.service.create_note("One", "research", ["Field Work"])
+
+        status, _, body = self.request("GET", "/api/export")
+
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(body), {"notes": [created.to_dict()]})
+
     def test_delete_rejects_invalid_ids_and_extra_segments(self):
         for path in (
             "/api/notes/nope",
@@ -107,6 +115,10 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(json.loads(body)["error"]["code"], "method_not_allowed")
 
         status, _, body = self.request("GET", "/api/import")
+        self.assertEqual(status, 405)
+        self.assertEqual(json.loads(body)["error"]["code"], "method_not_allowed")
+
+        status, _, body = self.request("POST", "/api/export")
         self.assertEqual(status, 405)
         self.assertEqual(json.loads(body)["error"]["code"], "method_not_allowed")
 
