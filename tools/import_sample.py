@@ -36,6 +36,8 @@ class ApiImportClient:
                 detail = error_payload.get("error", {}).get("message")
             except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
                 detail = None
+            finally:
+                exc.close()
             message = detail or exc.reason or "request failed"
             raise RuntimeError(f"API rejected the import: {message}") from exc
         except URLError as exc:
